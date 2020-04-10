@@ -53,9 +53,11 @@
 #  - added thumbnails and icons for cod7 (BO)
 #  03.11.2019 - v2.0.1 - ZOMBIE
 #  - adding reason to the report syntax
-#
+#  05.03.2020 - v2.0.2 - ZOMBIE 
+#  - fixing b3 bans and kicks
+#  - adding player ID
 
-__version__ = '2.0.1gh'
+__version__ = '2.0.2'
 __author__ = 'WatchMiltan'
 
 
@@ -283,12 +285,6 @@ class DiscordPlugin(b3.plugin.Plugin):
     def onEvent(self, event):
         if event.type and event.client.name in self.reportedplayers:
             lastBan = event.client.lastBan
-            
-            if lastBan.adminId == None:
-                lastBan.adminId = 'B3'
-            else:
-                lastBan.adminId = lastBan.adminId
-
             embed = DiscordEmbed(self.url, color=0xFFFFFF)
             if not (event.type == b3.events.EVT_CLIENT_DISCONNECT):
                 embed.set_mapview(
@@ -299,18 +295,33 @@ class DiscordPlugin(b3.plugin.Plugin):
                     self.debug("Shouldn't happen")
 
             if (event.type == b3.events.EVT_CLIENT_KICK):
-                embed.set_desc("%s has been kicked." % (event.client.name))
-                embed.set_footnote()
+                if lastBan.adminId == None:
+                    embed.set_desc("%s has been kicked." % (event.client.name))
+                    embed.set_footnote()
+                else:
+                    embed.set_desc("%s has been kicked." % (event.client.name))
+                    embed.set_footnote()             
             elif (event.type == b3.events.EVT_CLIENT_BAN):
-                embed.set_desc(event.client.name + " has been banned by " +
-                               self._adminPlugin.findClientPrompt('@%s' % str(lastBan.adminId), None).name)
-                embed.set_footnote(
-                    text="Reason: " + self.stripColors(lastBan.reason.replace(',', '')))
+                if lastBan.adminId is None:
+                    embed.set_desc(event.client.name + " has been banned by B3")
+                    embed.set_footnote(
+                        text="Reason: " + self.stripColors(lastBan.reason.replace(',', '')))
+                else:
+                    embed.set_desc(event.client.name + " has been banned by " +
+                                self._adminPlugin.findClientPrompt('@%s' % str(lastBan.adminId), None).name)
+                    embed.set_footnote(
+                        text="Reason: " + self.stripColors(lastBan.reason.replace(',', '')))                    
             elif (event.type == b3.events.EVT_CLIENT_BAN_TEMP):
-                embed.set_desc("%s has been temporarily banned by %s for %s" % (event.client.name, self._adminPlugin.findClientPrompt(
-                    '@%s' % str(lastBan.adminId), None).name, functions.minutesStr(lastBan.duration)))
-                embed.set_footnote(
-                    text="Reason: " + self.stripColors(lastBan.reason.replace(',', '')))
+                if lastBan.adminId is None:
+                    embed.set_desc("%s has been temporarily banned by B3 for %s" % (self._adminPlugin.findClientPrompt(
+                        '@%s' % str(lastBan.adminId), None).name, functions.minutesStr(lastBan.duration)))
+                    embed.set_footnote(
+                        text="Reason: " + self.stripColors(lastBan.reason.replace(',', '')))
+                else:
+                    embed.set_desc("%s has been temporarily banned by %s for %s" % (event.client.name, self._adminPlugin.findClientPrompt(
+                        '@%s' % str(lastBan.adminId), None).name, functions.minutesStr(lastBan.duration)))
+                    embed.set_footnote(
+                        text="Reason: " + self.stripColors(lastBan.reason.replace(',', '')))
             elif (event.type == b3.events.EVT_CLIENT_DISCONNECT) and not lastBan:
                 embed.set_desc("%s has left the game." % (event.client.name))
                 embed.set_footnote()
@@ -375,6 +386,7 @@ class DiscordPlugin(b3.plugin.Plugin):
             server = self.stripColors(str(dict['sv_hostname'])).title()
             map = dict['_mapName'].lower()
             game = dict['gameName'].lower()
+            id = str(client.id)
 
             if cheater[1:-1] not in self.reportedplayers:
                 self.reportedplayers.append(cheater[1:-1])
@@ -398,7 +410,7 @@ class DiscordPlugin(b3.plugin.Plugin):
                     'https://cdn0.iconfinder.com/data/icons/flat-design-basic-set-1/24/error-exclamation-512.png')
             # fixing new discord webhook format update
             embed.textbox(name='Reported Player',
-                          value=cheater[1:-1], inline=False)
+                          value=cheater[1:-1]+" (@%s)" %(id), inline=False)
             embed.textbox(name='Server', value=server, inline=False)
             embed.textbox(name='Reason', value=self.stripColors(
                 reason.replace(',', '')), inline=False)
