@@ -54,7 +54,6 @@
 #  03.11.2019 - v2.0.1 - ZOMBIE
 #  - adding reason to the report syntax
 #  05.03.2020 - v2.0.2 - ZOMBIE 
-#  - fixing b3 bans and kicks
 #  - adding player ID
 
 __version__ = '2.0.2'
@@ -287,45 +286,25 @@ class DiscordPlugin(b3.plugin.Plugin):
             lastBan = event.client.lastBan
             embed = DiscordEmbed(self.url, color=0xFFFFFF)
             if not (event.type == b3.events.EVT_CLIENT_DISCONNECT):
-                embed.set_mapview(
-                    'https://www.iconsdb.com/icons/download/green/checkmark-16.png')
-
+                embed.set_mapview('https://www.iconsdb.com/icons/download/green/checkmark-16.png')
+            
             if (event.type == b3.events.EVT_CLIENT_DISCONNECT):
                 if (event.type == b3.events.EVT_CLIENT_BAN):
                     self.debug("Shouldn't happen")
 
-            if (event.type == b3.events.EVT_CLIENT_KICK):
-                if lastBan.adminId == None:
-                    embed.set_desc("%s has been kicked." % (event.client.name))
-                    embed.set_footnote()
-                else:
-                    embed.set_desc("%s has been kicked." % (event.client.name))
-                    embed.set_footnote()             
+            if (event.type == b3.events.EVT_CLIENT_KICK): 
+                embed.set_desc("%s has been kicked." % (event.client.name))
+                embed.set_footnote()
             elif (event.type == b3.events.EVT_CLIENT_BAN):
-                if lastBan.adminId is None:
-                    embed.set_desc(event.client.name + " has been banned by B3")
-                    embed.set_footnote(
-                        text="Reason: " + self.stripColors(lastBan.reason.replace(',', '')))
-                else:
-                    embed.set_desc(event.client.name + " has been banned by " +
-                                self._adminPlugin.findClientPrompt('@%s' % str(lastBan.adminId), None).name)
-                    embed.set_footnote(
-                        text="Reason: " + self.stripColors(lastBan.reason.replace(',', '')))                    
+                embed.set_desc(event.client.name +" has been banned by " + self._adminPlugin.findClientPrompt('@%s' % str(lastBan.adminId), None).name)
+                embed.set_footnote(text="Reason: " + self.stripColors(lastBan.reason.replace(',', '')))
             elif (event.type == b3.events.EVT_CLIENT_BAN_TEMP):
-                if lastBan.adminId is None:
-                    embed.set_desc("%s has been temporarily banned by B3 for %s" % (self._adminPlugin.findClientPrompt(
-                        '@%s' % str(lastBan.adminId), None).name, functions.minutesStr(lastBan.duration)))
-                    embed.set_footnote(
-                        text="Reason: " + self.stripColors(lastBan.reason.replace(',', '')))
-                else:
-                    embed.set_desc("%s has been temporarily banned by %s for %s" % (event.client.name, self._adminPlugin.findClientPrompt(
-                        '@%s' % str(lastBan.adminId), None).name, functions.minutesStr(lastBan.duration)))
-                    embed.set_footnote(
-                        text="Reason: " + self.stripColors(lastBan.reason.replace(',', '')))
+                embed.set_desc("%s has been temporarily banned by %s for %s" % (event.client.name, self._adminPlugin.findClientPrompt('@%s' % str(lastBan.adminId), None).name, functions.minutesStr(lastBan.duration)))
+                embed.set_footnote(text="Reason: " + self.stripColors(lastBan.reason.replace(',', '')))
             elif (event.type == b3.events.EVT_CLIENT_DISCONNECT) and not lastBan:
                 embed.set_desc("%s has left the game." % (event.client.name))
                 embed.set_footnote()
-
+                
             embed.post()
             self.reportedplayers.remove(event.client.name)
         if len(self.reportedplayers) > 6:
