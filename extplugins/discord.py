@@ -53,7 +53,7 @@
 #  - added thumbnails and icons for cod7 (BO)
 #  03.11.2019 - v2.0.1 - ZOMBIE
 #  - adding reason to the report syntax
-#  05.03.2020 - v2.0.2 - ZOMBIE 
+#  05.03.2020 - v2.0.2 - ZOMBIE
 #  - adding player ID
 
 __version__ = '2.0.2'
@@ -170,7 +170,8 @@ class DiscordPlugin(b3.plugin.Plugin):
                 'plaza2': 'https://vignette.wikia.nocookie.net/callofduty/images/6/6d/Mall_Interior_Arkaden_MW3.png',
                 'seatown': 'https://vignette.wikia.nocookie.net/callofduty/images/a/a7/Bare_Load_Screen_Seatown_MW3.png/revision/latest?cb=20120320235504',
                 'underground': 'https://vignette.wikia.nocookie.net/callofduty/images/0/09/Bare_Load_Screen_Underground_MW3.png',
-                'village': 'https://vignette.wikia.nocookie.net/callofduty/images/f/f4/Bare_Load_Screen_Village_MW3.png'
+                'village': 'https://vignette.wikia.nocookie.net/callofduty/images/f/f4/Bare_Load_Screen_Village_MW3.png',
+                'bravo': 'https://vignette.wikia.nocookie.net/callofduty/images/2/20/Bare_Load_Screen_Mission_MW3.png/revision/latest?cb=20120320235416'
             },
 
             't6': {
@@ -284,11 +285,6 @@ class DiscordPlugin(b3.plugin.Plugin):
     def onEvent(self, event):
         if event.type and event.client.name in self.reportedplayers:
             lastBan = event.client.lastBan
-            
-            if lastBan.adminId == None:
-                lastBan.adminId = 'B3'
-            else:
-                lastBan.adminId = lastBan.adminId
 
             embed = DiscordEmbed(self.url, color=0xFFFFFF)
             if not (event.type == b3.events.EVT_CLIENT_DISCONNECT):
@@ -400,7 +396,7 @@ class DiscordPlugin(b3.plugin.Plugin):
                     'https://cdn0.iconfinder.com/data/icons/flat-design-basic-set-1/24/error-exclamation-512.png')
             # fixing new discord webhook format update
             embed.textbox(name='Reported Player',
-                          value=cheater[1:-1]+" (@%s)" %(id), inline=False)
+                          value=cheater[1:-1]+" (@%s)" % (id), inline=False)
             embed.textbox(name='Server', value=server, inline=False)
             embed.textbox(name='Reason', value=self.stripColors(
                 reason.replace(',', '')), inline=False)
