@@ -374,7 +374,6 @@ class DiscordPlugin(b3.plugin.Plugin):
             server = self.stripColors(str(dict['sv_hostname'])).title()
             map = dict['_mapName'].lower()
             game = dict['gameName'].lower()
-            id = str(client.id)
 
             # Getting online admins
             clist = self._adminPlugin.getAdmins()
