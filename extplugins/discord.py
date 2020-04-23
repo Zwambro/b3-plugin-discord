@@ -51,12 +51,15 @@
 #  - code cleanup
 #  - fixed event order
 #  - added thumbnails and icons for cod7 (BO)
-#  03.11.2019 - v2.0.1 - ZOMBIE
+#  03.11.2019 - v2.0.1 - Zwmabro
 #  - adding reason to the report syntax
-#  05.03.2020 - v2.0.2 - ZOMBIE
-#  - adding player ID
+#  03.03.2020 - v2.0.2 - Zwambro
+#  - adding player @ID
+#  03.03.2020 - v2.0.3 - Zwambro
+#  - adding admins status
+#  - send message to online admins on lobby
 
-__version__ = '2.0.2'
+__version__ = '2.0.3'
 __author__ = 'WatchMiltan'
 
 
@@ -364,15 +367,18 @@ class DiscordPlugin(b3.plugin.Plugin):
                 client.message('^1Incorrect syntax. !report <player> <reason>')
                 return False
 
-            cheater = str(self._adminPlugin.findClientPrompt(
-                input[0], client)).split(':')[2]
+            cheater = str(self._adminPlugin.findClientPrompt(input[0], client)).split(':')[2]
+            cheater_id = str(self._adminPlugin.findClientPrompt(input[0], client)).split(':')[0].split('@')[1]  # by $KILLER#0420
             reporter = self.stripColors(client.exactName)
-
             dict = self.console.game.__dict__
             server = self.stripColors(str(dict['sv_hostname'])).title()
             map = dict['_mapName'].lower()
             game = dict['gameName'].lower()
             id = str(client.id)
+
+            # Getting online admins
+            clist = self._adminPlugin.getAdmins()
+            onlineAdmin = len(clist)
 
             if cheater[1:-1] not in self.reportedplayers:
                 self.reportedplayers.append(cheater[1:-1])
@@ -395,11 +401,24 @@ class DiscordPlugin(b3.plugin.Plugin):
                 embed.set_mapview(
                     'https://cdn0.iconfinder.com/data/icons/flat-design-basic-set-1/24/error-exclamation-512.png')
             # fixing new discord webhook format update
-            embed.textbox(name='Reported Player',
-                          value=cheater[1:-1]+" (@%s)" % (id), inline=False)
+            embed.set_desc("**%s** Reported **%s** (@%s)" %
+                           (reporter, cheater[1:-1], cheater_id))
             embed.textbox(name='Server', value=server, inline=False)
-            embed.textbox(name='Reason', value=self.stripColors(
-                reason.replace(',', '')), inline=False)
-            embed.set_footnote(text='reported by ' + reporter)
+            embed.textbox(name='Reason', value=self.stripColors(reason.replace(',', '')), inline=False)
+
+            if onlineAdmin == 1:
+                embed.set_footnote(text='Online admins: ' + str(onlineAdmin) + ' admin')
+            elif onlineAdmin > 1:
+                embed.set_footnote(text='Online admins: ' + str(onlineAdmin) + ' admins')
+            else:
+                embed.set_footnote(text='No admin Online!!')
+
             embed.post()
-            client.message('Player has been ^2reported on Discord!')
+
+            #inform online admins
+            for admin in clist:
+                if admin != cheater[1:-1]:
+                    admin.message('%s has been reported for %s, check him please'% (cheater[1:-1], reason))                                               
+                    client.message('Player has been ^2reported on Discord!')
+                else:
+                    client.message('Player has been ^2reported on Discord!')
