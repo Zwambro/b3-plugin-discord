@@ -363,7 +363,6 @@ class DiscordPlugin(b3.plugin.Plugin):
 
             # report syntax should be !report <player> <reason>
             if not reason:
-
                 client.message('^1Incorrect syntax. !report <player> <reason>')
                 return False
 
