@@ -378,6 +378,9 @@ class DiscordPlugin(b3.plugin.Plugin):
 
             # Getting online admins
             adminList = self._adminPlugin.getAdmins()
+            for admin in adminList:
+                _onlineAdmins = []
+                _onlineAdmins.append(admin.name)
 
             if cheater[1:-1] not in self.reportedplayers:
                 self.reportedplayers.append(cheater[1:-1])
@@ -403,26 +406,16 @@ class DiscordPlugin(b3.plugin.Plugin):
             embed.set_desc("**%s** Reported **%s** **(@%s)**" %
                            (reporter, cheater[1:-1], cheater_id))
             embed.textbox(name='Server', value=server, inline=False)
-            embed.textbox(name='Reason', value=self.stripColors(
-                reason.replace(',', '')), inline=False)
+            embed.textbox(name='Reason', value=self.stripColors(reason.replace(',', '')), inline=False)
 
             # inform online admins
-            for admin in adminList:
-                while (admin is not None):
-                    if (admin != client):
-                        admin.message('%s ^1has been reported for^7 %s, ^1check him please^7' % (
-                            cheater[1:-1], reason))
-                        client.message('Player has been ^2reported on Discord!')
-                        embed.set_footnote(text='Online admins: ' +
-                                        self.stripColors(admin.exactName) + ', ')                        
-                        client.message('Player has been ^2reported on Discord!')
-                        break
-                    else:
-                        client.message('Player has been ^2reported on Discord!')
-                        embed.set_footnote(text='Online admins: ' +
-                                        self.stripColors(admin.exactName) + ', ')    
-                        break
-                else:
-                    client.message('Player has been ^2reported on Discord!')    
-                    embed.set_footnote(text='No Admin Online!!')                
+            if len(adminList) > 0:  
+                embed.set_footnote(text='Online admins: ' + ', ' .join(_onlineAdmins)) 
+                client.message('Player has been ^2reported on Discord!')
+                admin.message('%s ^1has been reported for^7 %s, ^1check him please^7' % (cheater[1:-1], reason))
+            elif len(adminList) == 0:
+                embed.set_footnote(text='No Admin Online!!')
+                client.message('Player has been ^2reported on Discord!') 
+
             embed.post()
+            _onlineAdmins.pop(0)
