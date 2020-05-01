@@ -363,24 +363,22 @@ class DiscordPlugin(b3.plugin.Plugin):
 
             # report syntax should be !report <player> <reason>
             if not reason:
+
                 client.message('^1Incorrect syntax. !report <player> <reason>')
                 return False
 
-            cheater = str(self._adminPlugin.findClientPrompt(
-                input[0], client)).split(':')[2]
-            cheater_id = str(self._adminPlugin.findClientPrompt(input[0], client)).split(
-                ':')[0].split('@')[1]  # by $KILLER#0420
+            cheater = str(self._adminPlugin.findClientPrompt(input[0], client)).split(':')[2]
+            cheater_id = str(self._adminPlugin.findClientPrompt(input[0], client)).split(':')[0].split('@')[1]  # by $KILLER#0420
             reporter = self.stripColors(client.exactName)
             dict = self.console.game.__dict__
             server = self.stripColors(str(dict['sv_hostname'])).title()
             map = dict['_mapName'].lower()
             game = dict['gameName'].lower()
+            id = str(client.id)
 
             # Getting online admins
-            adminList = self._adminPlugin.getAdmins()
-            for admin in adminList:
-                _onlineAdmins = []
-                _onlineAdmins.append(admin.name)
+            clist = self._adminPlugin.getAdmins()
+            onlineAdmin = len(clist)
 
             if cheater[1:-1] not in self.reportedplayers:
                 self.reportedplayers.append(cheater[1:-1])
@@ -403,19 +401,24 @@ class DiscordPlugin(b3.plugin.Plugin):
                 embed.set_mapview(
                     'https://cdn0.iconfinder.com/data/icons/flat-design-basic-set-1/24/error-exclamation-512.png')
             # fixing new discord webhook format update
-            embed.set_desc("**%s** Reported **%s** **(@%s)**" %
+            embed.set_desc("**%s** Reported **%s** (@%s)" %
                            (reporter, cheater[1:-1], cheater_id))
             embed.textbox(name='Server', value=server, inline=False)
             embed.textbox(name='Reason', value=self.stripColors(reason.replace(',', '')), inline=False)
 
-            # inform online admins
-            if len(adminList) > 0:  
-                embed.set_footnote(text='Online admins: ' + ', ' .join(_onlineAdmins)) 
-                client.message('Player has been ^2reported on Discord!')
-                admin.message('%s ^1has been reported for^7 %s, ^1check him please^7' % (cheater[1:-1], reason))
-            elif len(adminList) == 0:
-                embed.set_footnote(text='No Admin Online!!')
-                client.message('Player has been ^2reported on Discord!') 
+            if onlineAdmin == 1:
+                embed.set_footnote(text='Online admins: ' + str(onlineAdmin) + ' admin')
+            elif onlineAdmin > 1:
+                embed.set_footnote(text='Online admins: ' + str(onlineAdmin) + ' admins')
+            else:
+                embed.set_footnote(text='No admin Online!!')
 
             embed.post()
-            _onlineAdmins.pop(0)
+
+            #inform online admins
+            for admin in clist:
+                if admin != cheater[1:-1]:
+                    admin.message('%s has been reported for %s, check him please'% (cheater[1:-1], reason))                                               
+                    client.message('Player has been ^2reported on Discord!')
+                else:
+                    client.message('Player has been ^2reported on Discord!')
