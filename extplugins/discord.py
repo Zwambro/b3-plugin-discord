@@ -417,7 +417,7 @@ class DiscordPlugin(b3.plugin.Plugin):
 
             #inform online admins
             for admin in clist:
-                if admin != cheater[1:-1]:
+                if admin != client:
                     admin.message('%s has been reported for %s, check him please'% (cheater[1:-1], reason))                                               
                     client.message('Player has been ^2reported on Discord!')
                 else:
