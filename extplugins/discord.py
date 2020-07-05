@@ -58,8 +58,11 @@
 #  03.03.2020 - v2.0.3 - Zwambro
 #  - adding admins status
 #  - send message to online admins on lobby
+#  05.08.2020 - v2.0.4 - Zwambro
+#  - add new MW3 maps
+#  - fix "send message to online admin"
 
-__version__ = '2.0.3'
+__version__ = '2.0.4'
 __author__ = 'WatchMiltan'
 
 
@@ -174,7 +177,18 @@ class DiscordPlugin(b3.plugin.Plugin):
                 'seatown': 'https://vignette.wikia.nocookie.net/callofduty/images/a/a7/Bare_Load_Screen_Seatown_MW3.png/revision/latest?cb=20120320235504',
                 'underground': 'https://vignette.wikia.nocookie.net/callofduty/images/0/09/Bare_Load_Screen_Underground_MW3.png',
                 'village': 'https://vignette.wikia.nocookie.net/callofduty/images/f/f4/Bare_Load_Screen_Village_MW3.png',
-                'bravo': 'https://vignette.wikia.nocookie.net/callofduty/images/2/20/Bare_Load_Screen_Mission_MW3.png/revision/latest?cb=20120320235416'
+                'bravo': 'https://vignette.wikia.nocookie.net/callofduty/images/2/20/Bare_Load_Screen_Mission_MW3.png/revision/latest?cb=20120320235416',
+                'aground_ss': 'https://steamuserimages-a.akamaihd.net/ugc/863988638212323384/EF7FCBBB4AAA36D315073B035F32E80D47F2B851/',
+                'restrepo_ss': 'https://steamuserimages-a.akamaihd.net/ugc/863988638212348195/5CEB479BFC6BCF70A1433AFA4A507659E1A4980A/',
+                'crosswalk_ss': 'https://steamuserimages-a.akamaihd.net/ugc/863988638212329587/7522F3C346BA8ED67F997B08C66A45B8C44045D8/',
+                'burn_ss': 'https://steamuserimages-a.akamaihd.net/ugc/863988638212326973/76BD22E7E68BB5B6C03D7E5C10E30E7ABC1264A1/',
+                'six_ss': 'https://steamuserimages-a.akamaihd.net/ugc/863988638212352266/C6D33D18BD90EC1833FAB1D8500143103A2F7FE1/',
+                'terminal_cls': 'https://steamuserimages-a.akamaihd.net/ugc/863988638212352937/8AFDEF9025139B3A2BAA907F58C73D5E89101AF6/',
+                'park': 'https://steamuserimages-a.akamaihd.net/ugc/863988638212341569/273AAAFE8C6BB099BBD37FAC591008E455DA69DD/',
+                'overwatch': 'https://steamuserimages-a.akamaihd.net/ugc/863988638212340015/CABEDEDCD8516EDD84296FE15F10E1ECB305C1E1/',
+                'hillside_ss': 'https://steamuserimages-a.akamaihd.net/ugc/863988638212333021/0D384677212F3A791BE37B51D2DA988A9C1FC9D6/',
+                'nola': 'https://steamuserimages-a.akamaihd.net/ugc/863988638212339129/C9EB9FF7B11F17932561FCFE67810F0E42E9FFAF/',
+                'hillside_ss': 'https://steamuserimages-a.akamaihd.net/ugc/863988638212333021/0D384677212F3A791BE37B51D2DA988A9C1FC9D6/'
             },
 
             't6': {
@@ -279,13 +293,14 @@ class DiscordPlugin(b3.plugin.Plugin):
         self.registerEvent(b3.events.EVT_CLIENT_BAN_TEMP)  # 28
         self.registerEvent(b3.events.EVT_CLIENT_DISCONNECT)  # 10
         self._adminPlugin.registerCommand(self, 'report', 0, self.cmd_report)
-        self._adminPlugin.registerCommand(self, 'clean', 40, self.cmd_clean)
+        self._adminPlugin.registerCommand(self, 'clean', 50, self.cmd_clean)
         self.debug('Report Command registered in admin plugin')
 
     def stripColors(self, s):
         return re.sub('\^[0-9]{1}', '', s)
 
     def onEvent(self, event):
+        
         if event.type and event.client.name in self.reportedplayers:
             lastBan = event.client.lastBan
 
@@ -363,22 +378,22 @@ class DiscordPlugin(b3.plugin.Plugin):
 
             # report syntax should be !report <player> <reason>
             if not reason:
-
                 client.message('^1Incorrect syntax. !report <player> <reason>')
                 return False
 
             cheater = str(self._adminPlugin.findClientPrompt(input[0], client)).split(':')[2]
             cheater_id = str(self._adminPlugin.findClientPrompt(input[0], client)).split(':')[0].split('@')[1]  # by $KILLER#0420
+
             reporter = self.stripColors(client.exactName)
             dict = self.console.game.__dict__
             server = self.stripColors(str(dict['sv_hostname'])).title()
             map = dict['_mapName'].lower()
             game = dict['gameName'].lower()
-            id = str(client.id)
 
             # Getting online admins
-            clist = self._adminPlugin.getAdmins()
-            onlineAdmin = len(clist)
+            adminList = self._adminPlugin.getAdmins()
+            for admin in adminList:
+                admin_name = admin.name
 
             if cheater[1:-1] not in self.reportedplayers:
                 self.reportedplayers.append(cheater[1:-1])
@@ -386,8 +401,7 @@ class DiscordPlugin(b3.plugin.Plugin):
             if game in self.gamelist:
                 gamelist = self.gamelist[game]
                 embed = DiscordEmbed(self.url, color=gamelist['color'])
-                embed.set_gamename(
-                    name=gamelist['name'], icon=gamelist['icon'])
+                embed.set_gamename(name=gamelist['name'], icon=gamelist['icon'])
                 embed.set_mapview(
                     'https://cdn0.iconfinder.com/data/icons/flat-design-basic-set-1/24/error-exclamation-512.png')
 
@@ -401,24 +415,17 @@ class DiscordPlugin(b3.plugin.Plugin):
                 embed.set_mapview(
                     'https://cdn0.iconfinder.com/data/icons/flat-design-basic-set-1/24/error-exclamation-512.png')
             # fixing new discord webhook format update
-            embed.set_desc("**%s** Reported **%s** (@%s)" %
-                           (reporter, cheater[1:-1], cheater_id))
+            embed.set_desc("**%s** Reported **%s** (@%s)" %(reporter, cheater[1:-1], cheater_id))
             embed.textbox(name='Server', value=server, inline=False)
             embed.textbox(name='Reason', value=self.stripColors(reason.replace(',', '')), inline=False)
 
-            if onlineAdmin == 1:
-                embed.set_footnote(text='Online admins: ' + str(onlineAdmin) + ' admin')
-            elif onlineAdmin > 1:
-                embed.set_footnote(text='Online admins: ' + str(onlineAdmin) + ' admins')
-            else:
-                embed.set_footnote(text='No admin Online!!')
+            # inform online admins
+            if len(adminList) > 0:  
+                embed.set_footnote(text='Online admins: ' + ', ' .join([str(admin.name) for admin in adminList])) 
+                client.message('Player has been ^2reported on Discord!')
+                admin.message('%s ^1has been reported for^7 %s, ^1check him please^7' % (cheater[1:-1], reason))
+            elif len(adminList) == 0:
+                embed.set_footnote(text='No Admin Online!!')
+                client.message('Player has been ^2reported on Discord!') 
 
             embed.post()
-
-            #inform online admins
-            for admin in clist:
-                if admin != client:
-                    admin.message('%s has been reported for %s, check him please'% (cheater[1:-1], reason))                                               
-                    client.message('Player has been ^2reported on Discord!')
-                else:
-                    client.message('Player has been ^2reported on Discord!')
